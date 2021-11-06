@@ -91,9 +91,23 @@ print("\n\n")
 
 
 def T2_operator(psi, den):
-	return psi #
+	#exp(-1/2 * i dt * V)
+	pot = pot_ext + dEps_dPsi(den)
+	psi *= np.exp(-0.5j * pot * dt)
 	
+	psi = np.fft.fftn(psi)		
+	psi *= kinprop
+	psi = np.fft.ifftn(psi)
 
+	den = np.absolute(psi) ** 2
+	phi_dd = get_phi_dd(den)
+	pot = pot_ext + dEps_dPsi(den, phi_dd)
+	
+	psi *= np.exp(-0.5j * pot * dt)
+	if(imProp): #normalize		
+		psi *= np.sqrt(nparticles)/np.sqrt(d3r * np.sum(np.absolute(psi) ** 2))
+	return psi
+	
 
 	
 def energy(psi, den):
