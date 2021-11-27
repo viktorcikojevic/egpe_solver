@@ -5,46 +5,16 @@ import time
 
 print("SIM. started at ", time.ctime())
 start_time = time.time()
+from setup import SimulationSetup
+from setup import MFLHYSimulationSetup
 
-
-
-
-nparticles = np1 + np2
-# np1 = 102. * 1000.
-# np2 = 148. * 1000.
-print("number of type 1 particles = %d\nnumber of type 2 particles = %d" % (np1, np2))
-print("Kappa_3 = %.5f " % kappa_3)
-
-
-# if you want 1D or 2D, just change this array
-nxyz = numpy.array([128, 128,  128])
-# L_ok = np.array([9000., 4500., 4500.]) #you add on top of L an interface which is an absorbing area. L_ok is area without the interface
-# if you want 1D or 2D, just change this array. This means between -L/2 and L/2
-L = 30000. * numpy.array([1.5, 1.5, 1.5])
-				# if you put L_ok=L, this means that no area has absorbing-boundary conditions
-L_ok = 0.9 * L
-activateAbsorbingWalls = True
-fac_time = 1
-t_equil = 1.E+06 / fac_time
-# np.inf for infinite      #total propagation time. Count from the real (imaginary) timestep if you propagate in real (imaginary) time
-t_prod = 15.E+06/fac_time
-deltat_prod = 1000.  # real timestep
-deltat_equil = 1000.  # this is absolute value of imaginary part
-
-
-printToStdoutEvery = 10
-printDenEvery = 200
-read_from_file = False; infile = 'psi_in.npy'
-k_kick_fac = 5
-k_kick_ratio = 0.4 + k_kick_fac * 0.2 - (npart_fac % 2) * 0.1
-print("k_kick_ratio = %.3e" % k_kick_ratio)
-if(k_kick_ratio > 1.11):
-	print("velocity too large")
-	exit()
-# exit()
-manipulate_psi = False; k_kick = k_kick_ratio * \
-    v_over_vtilde(sim.a12, sim.a22); separation_distance = 36
-
+class MFLHYSimulation():
+    def __init__(self, kwargs):
+        self.sim_setup = SimulationSetup(kwargs)
+        self.physics_setup = MFLHYSimulationSetup(kwargs)
+        
+    def run(self):
+        pass
 
 
 
@@ -56,7 +26,7 @@ def energy_density_interaction(den1, den2):
 	return 2.*np.pi*den1**2 + 2.*np.pi*sim.a22*den2**2 + 4.*np.pi*sim.a12*den1*den2 + (256.*np.sqrt(np.pi)/15.) * np.power(den1 + den2*sim.a22, 5./2)
 
 
-def dEps_dPsi(den1, den2, kappa_3_):
+def dEps_dPsi(den1, den2):
 	d12 = (128. * np.sqrt(np.pi)/3.) * np.power(den1 + den2*sim.a22, 3./2)
 	pot_int1 = 4.*np.pi*den1 + 4.*np.pi*sim.a12*den2 + d12 - 1.j * kappa_3_ * den1**2
 	pot_int2 = 4.*np.pi*den2*sim.a22 + 4.*np.pi*sim.a12*den1 + d12 * sim.a22
@@ -79,13 +49,13 @@ print("v over vtilde is %.6e" % v_over_vtilde(sim.a12, sim.a22))
 imProp = False
 # setting up auxiliary variables
 N_DIM = len(nxyz)
-LHalf = L/2.
-dx = L / nxyz
-dk = (2.*np.pi) / L
+L_gridHalf = L_grid/2.
+dx = L_grid / nxyz
+dk = (2.*np.pi) / L_grid
 d3r = np.prod(dx)
 # psi = np.copy(x)
 
-x = np.linspace(-LHalf[0], LHalf[0], nxyz[0], endpoint=False)
+x = np.linspace(-L_gridHalf[0], L_gridHalf[0], nxyz[0], endpoint=False)
 kx = np.fft.fftfreq(nxyz[0], dx[0] / (2. * np.pi))
 # print( " ******** x ************ ", x, kx)
 print("max(kx) / v=1 = %.5e" % (np.max(kx) / v_over_vtilde(sim.a12, sim.a22)))
@@ -93,11 +63,11 @@ print("max(kx) / v=1 = %.5e" % (np.max(kx) / v_over_vtilde(sim.a12, sim.a22)))
 
 d3k = kx[1] - kx[0]
 if(N_DIM >= 2):
-	y = np.linspace(-LHalf[1], LHalf[1], nxyz[1], endpoint=False)
+	y = np.linspace(-L_gridHalf[1], L_gridHalf[1], nxyz[1], endpoint=False)
 	ky = np.fft.fftfreq(nxyz[1], dx[1] / (2. * np.pi))
 	d3k *= ky[1] - ky[0]
 if(N_DIM >= 3):
-	z = np.linspace(-LHalf[2], LHalf[2], nxyz[2], endpoint=False)
+	z = np.linspace(-L_gridHalf[2], L_gridHalf[2], nxyz[2], endpoint=False)
 	kz = np.fft.fftfreq(nxyz[2], dx[2] / (2. * np.pi))
 	d3k *= kz[1] - kz[0]
 # print( " ******** y ************ ", y, ky)
@@ -126,7 +96,7 @@ dt_prod = dt_x*deltat_prod + 0.j
 
 print(" *** Parameters of the simulation ***")
 print("nxyz ", nxyz)
-print("L ", L)
+print("L_grid ", L_grid)
 print("N_DIM ", N_DIM)
 print("dx ", dx)
 print("dk ", dk)
@@ -329,7 +299,7 @@ imProp = True
 dt = dt_equil
 kinprop = np.exp(-1j * dt *  sumk2)
 dt *= -0.5j
-print(" *** EQUILIBRATION ... **** ")
+print(" *** EQUIL_gridIBRATION ... **** ")
 dft_simulation(t_equil, deltat_equil, 0.)
 
 '''

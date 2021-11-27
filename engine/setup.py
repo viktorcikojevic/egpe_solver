@@ -1,25 +1,26 @@
-class SimulationSetup():
+import numpy as np
+
+class MFLHYSimulationSetup():
     def __init__(self, **kwargs):
-        
         # Set up of the scattering lengths
-        self.a11 = kwargs.get("a11")
-        self.a22 = kwargs.get("a22")
-        self.a12 = kwargs.get("a12")
+        self.a11 = 1.
+        self.a22 = kwargs.get("a22") / kwargs.get("a11")
+        self.a12 = kwargs.get("a12") / kwargs.get("a11")
+        self.m1  = 1. 
+        self.m2  = kwargs.get("m2") / kwargs.get("m1")
         
+class SimulationSetup():
+    def __init__(self, **kwargs):        
         
+        self.nxyz = np.array(kwargs.get("nxyz"), dtype=np.int)
+        self.L_grid = np.array(kwargs.get("L_grid"), dtype=np.float32)
+        L_grid_nobuffer_percentage = kwargs.get("L_grid_nobuffer_percentage")
+        self.L_grid_nobuffer = self.L_grid * L_grid_nobuffer_percentage
+        self.dtau = kwargs.get("dtau")
+        self.dt = kwargs.get("dt")
+        self.entol = kwargs.get("entol")
+        self.printfreq = kwargs.get("printfreq")
+        
+
         # Set up of the DFT parameters
-        if kwargs["theory"] == "MFLHY":
-            x = 1.
-            alpha = 0.5 * 4*np.pi*(1.+x*x + 2*x*sim.a12/np.sqrt(sim.a22)) / \
-                                np.power(1 + x/np.sqrt(sim.a22), 2);
-            beta = 0.5 * (512*np.sqrt(np.pi)/15) * \
-                        np.power((1+x*np.sqrt(sim.a22)) / (1+x/np.sqrt(sim.a22)), 5./2);
-            gamma = 3./2;
-        elif kwargs["theory"] == "DFT":
-            alpha = kwargs["alpha"]
-            beta  = kwargs["beta"]
-            gamma = kwargs["gamma"]
-        else:
-            raise KeyError("You need to put --theory either to MFLHY or DFT")
-        
         
